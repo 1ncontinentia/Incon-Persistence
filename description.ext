@@ -1,0 +1,14 @@
+class CfgFunctions
+{
+	#include "INC_persist\cfgFunctions.hpp"
+};
+
+class CfgRemoteExec
+{
+   class Functions
+   {
+       mode = 2;
+       jip = 1;
+       #include "INC_persist\functionsWhitelist.hpp"
+   };
+};
