@@ -1,9 +1,9 @@
 class INC_persist
 {
-	tag = "INCON Persistence";
+	tag = "INCON";
 	class groupPersist
 	{
-		file = "INC_groupPersist\func";
+		file = "INC_persist\func";
 		class groupPersist {description = "Main class for group persistence.";};
 		class persHandler {description = "Gets data for unit persistence and executes it."};
 	};
