@@ -51,15 +51,15 @@ switch (_database) do {
 
                     if (_read isEqualTo []) exitWith {};
 
+                    {if ((_x != leader group _x) && {!(_x in playableUnits)}) then {deleteVehicle _x}} forEach units group _unit;
+
                     sleep 1;
 
                     _index = (_read select 0);
 
                     _index params ["_float","_groupSize","_rating"];
 
-                    {if ((_x != leader group _x) && {!(_x in playableUnits)}) then {deleteVehicle _x}} forEach units group _unit;
-
-                    sleep 1; 
+                    sleep 2;
 
                     _unit addRating (0 - (rating _unit));
 
