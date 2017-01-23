@@ -27,12 +27,15 @@ switch (_database) do {
                     params ["_unit"];
                     private ["_read","_read2","_read3","_groupData","_dataKey","_dataKey2","_dataKey3","_index"];
 
-                    waituntil {sleep 1; (player getvariable ["alive_sys_player_playerloaded",false])};
+                    waituntil {
+                        sleep 1;
+                        (!(isNil "INC_oldKey") && (player getvariable ["alive_sys_player_playerloaded",false]))
+                    };
 
-                    if (isNil "INC_oldKey") then {
+                    /*if (isNil "INC_oldKey") then {
                         _oldKey = ["InconPersKey","loadAliveData"] remoteExecCall ["INCON_fnc_persHandler",2];
                         missionNamespace setVariable ["INC_oldKey",_oldKey,true];
-                    };
+                    };*/
 
                     sleep 1;
 
@@ -55,6 +58,8 @@ switch (_database) do {
                     _index params ["_float","_groupSize","_rating"];
 
                     {if ((_x != leader group _x) && {!(_x in playableUnits)}) then {deleteVehicle _x}} forEach units group _unit;
+
+                    sleep 1; 
 
                     _unit addRating (0 - (rating _unit));
 
@@ -86,12 +91,9 @@ switch (_database) do {
 
                     sleep 20;
 
-                    if (isNil "INC_NewKey") then {
-
-                        _InconPersKey = (random 10000);
-                        missionNamespace setVariable ["INC_NewKey",_InconPersKey,true];
-                        [["InconPersKey",INC_NewKey],"saveAliveData"] remoteExecCall ["INCON_fnc_persHandler",2];
-                        diag_log format ["Incon Persistence key saved: %1",_InconPersKey];
+                    waituntil {
+                        sleep 1;
+                        !(isNil "INC_NewKey")
                     };
 
                     waitUntil {
@@ -121,8 +123,6 @@ switch (_database) do {
                             _dataKey3 = format ["INC_persGroupData3%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
                             ["write", [(str missionName), _dataKey3, _encodedData3]] call inidbi;
                         };
-
-                        [["InconPersKey",INC_NewKey],"saveAliveData"] remoteExecCall ["INCON_fnc_persHandler",2];
 
                         !(isPlayer _unit)
 
