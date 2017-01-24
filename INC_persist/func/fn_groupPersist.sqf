@@ -33,7 +33,7 @@ switch (_database) do {
                     };
 
                     /*if (isNil "INC_oldKey") then {
-                        _oldKey = ["InconPersKey","loadAliveData"] remoteExecCall ["INCON_fnc_persHandler",2];
+                        _oldKey = ["InconPersKey","loadAliveData"] remoteExecCall ["INCON_fnc_persMain",2];
                         missionNamespace setVariable ["INC_oldKey",_oldKey,true];
                     };*/
 
@@ -65,19 +65,19 @@ switch (_database) do {
 
                     _unit addRating _rating;
 
-                    [_read,"loadGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                    [_read,"loadGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
                     if (_groupSize >= 5) then {
 
                         sleep 0.1;
 
-                        [_read2,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                        [_read2,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
                         if (_groupSize >= 9) then {
 
                             sleep 0.1;
 
-                            [_read3,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                            [_read3,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
                         };
                     };
                 };
@@ -100,7 +100,7 @@ switch (_database) do {
 
                         sleep 47;
 
-                        _encodedData = [[_unit],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                        _encodedData = [[_unit],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
                         sleep 1;
 
@@ -112,14 +112,14 @@ switch (_database) do {
 
                         if (count units group _unit >= 6) then {
                             private ["_encodedData2"];
-                            _encodedData2 = [[_unit,"second"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                            _encodedData2 = [[_unit,"second"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
                             _dataKey2 = format ["INC_persGroupData2%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
                             ["write", [(str missionName), _dataKey2, _encodedData2]] call inidbi;
                         };
 
                         if (count units group _unit >= 11) then {
                             private ["_encodedData3"];
-                            _encodedData3 = [[_unit,"third"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                            _encodedData3 = [[_unit,"third"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
                             _dataKey3 = format ["INC_persGroupData3%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
                             ["write", [(str missionName), _dataKey3, _encodedData3]] call inidbi;
                         };
@@ -153,7 +153,7 @@ switch (_database) do {
 
 					_dataKey = format ["INC_persGroupData%1%2",_unit,(getPlayerUID _unit)];
 
-					_groupData = [_dataKey,"loadAliveData"] remoteExecCall ["INCON_fnc_persHandler",2];
+					_groupData = [_dataKey,"loadAliveData"] remoteExecCall ["INCON_fnc_persMain",2];
 
 					sleep 0.2;
 
@@ -161,7 +161,7 @@ switch (_database) do {
 
 						{if ((_x != leader group _x) || {_x in playableUnits}) then {deleteVehicle _x}} forEach units group _unit;
 
-						[_groupData,"loadGroup",_unit] call INCON_fnc_persHandler;
+						[_groupData,"loadGroup",_unit] call INCON_fnc_persMain;
 
 					};
 				};
@@ -183,11 +183,11 @@ switch (_database) do {
 
 								sleep 59;
 
-								_groupData = [_unit,"saveGroup"] call INCON_fnc_persHandler;
+								_groupData = [_unit,"saveGroup"] call INCON_fnc_persMain;
 
 								sleep 1;
 
-								[[_dataKey,_groupData],"saveAliveData"] remoteExecCall ["INCON_fnc_persHandler",2];
+								[[_dataKey,_groupData],"saveAliveData"] remoteExecCall ["INCON_fnc_persMain",2];
 
 								!(isPlayer _unit)
 
@@ -212,11 +212,11 @@ switch (_database) do {
 
 							};
 
-							_groupData = [_unit,"saveGroup"] call INCON_fnc_persHandler;
+							_groupData = [_unit,"saveGroup"] call INCON_fnc_persMain;
 
 							sleep 1;
 
-							[[_dataKey,_groupData],"saveAliveData"] remoteExecCall ["INCON_fnc_persHandler",2];
+							[[_dataKey,_groupData],"saveAliveData"] remoteExecCall ["INCON_fnc_persMain",2];
 						};
         			};
         		};
@@ -272,19 +272,19 @@ switch (_database) do {
 
                         _unit addRating _rating;
 
-                        [_read,"loadGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                        [_read,"loadGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
                         if (_groupSize >= 5) then {
 
                             sleep 0.1;
 
-                            [_read2,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                            [_read2,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
                             if (_groupSize >= 9) then {
 
                                 sleep 0.1;
 
-                                [_read3,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+                                [_read3,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
                             };
                         };
                     };
@@ -306,7 +306,7 @@ switch (_database) do {
 
         						sleep 57;
 
-        	                    _encodedData = [[_unit],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+        	                    _encodedData = [[_unit],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
 								sleep 1;
 
@@ -318,14 +318,14 @@ switch (_database) do {
 
                                 if (count units group _unit >= 6) then {
                                     private ["_encodedData2"];
-            	                    _encodedData2 = [[_unit,"second"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+            	                    _encodedData2 = [[_unit,"second"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
                 	                _dataKey2 = format ["INC_persGroupData2%1%2",_unit,(getPlayerUID _unit)];
             	                    ["write", [(str missionName), _dataKey2, _encodedData2]] call inidbi;
                                 };
 
                                 if (count units group _unit >= 11) then {
                                     private ["_encodedData3"];
-            	                    _encodedData3 = [[_unit,"third"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+            	                    _encodedData3 = [[_unit,"third"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
                 	                _dataKey3 = format ["INC_persGroupData3%1%2",_unit,(getPlayerUID _unit)];
             	                    ["write", [(str missionName), _dataKey3, _encodedData3]] call inidbi;
                                 };
@@ -353,7 +353,7 @@ switch (_database) do {
 
 							};
 
-    	                    _encodedData = [_unit,"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persHandler;
+    	                    _encodedData = [_unit,"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
     	                    ["write", [(str missionName), _dataKey, _encodedData]] call inidbi;
 
         				};

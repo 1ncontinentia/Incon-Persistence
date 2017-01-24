@@ -109,7 +109,7 @@ switch (_mode) do {
 			private ["_groupMember","_unitInfo"];
 
 			_groupMember = (units group _unit) select _i;
-			_unitInfo = [_groupMember] call INCON_fnc_persHandler;
+			_unitInfo = [_groupMember] call INCON_fnc_persMain;
 			_result pushBack _unitInfo;
 
 		};
@@ -124,7 +124,7 @@ switch (_mode) do {
 			_result = [];
 
 			_unitInfo = _input select _i;
-			_groupMember = [_unitInfo,"create",_leader] call INCON_fnc_persHandler;
+			_groupMember = [_unitInfo,"create",_leader] call INCON_fnc_persMain;
 			_result pushBack _groupMember;
 
 		};
@@ -153,7 +153,7 @@ switch (_mode) do {
 
 						_groupMember = (units group _unit) select _i;
 						if !((_groupMember getVariable ["isSneaky",false]) || {isPlayer _groupMember} || {_groupMember in playableUnits}) then {
-							_unitInfo = [_groupMember] call INCON_fnc_persHandler;
+							_unitInfo = [_groupMember] call INCON_fnc_persMain;
 							_encodedData = ["encodeBase64", (str _unitInfo)] call _database;
 							_result pushBack _encodedData;
 						};
@@ -173,7 +173,7 @@ switch (_mode) do {
 
 						_groupMember = (units group _unit) select _i;
 						if !((_groupMember getVariable ["isSneaky",false]) || {isPlayer _groupMember} || {_groupMember in playableUnits}) then {
-							_unitInfo = [_groupMember] call INCON_fnc_persHandler;
+							_unitInfo = [_groupMember] call INCON_fnc_persMain;
 							_encodedData = ["encodeBase64", (str _unitInfo)] call _database;
 							_result pushBack _encodedData;
 						};
@@ -193,7 +193,7 @@ switch (_mode) do {
 
 						_groupMember = (units group _unit) select _i;
 						if !((_groupMember getVariable ["isSneaky",false]) || {isPlayer _groupMember} || {_groupMember in playableUnits}) then {
-							_unitInfo = [_groupMember] call INCON_fnc_persHandler;
+							_unitInfo = [_groupMember] call INCON_fnc_persMain;
 							_encodedData = ["encodeBase64", (str _unitInfo)] call _database;
 							_result pushBack _encodedData;
 						};
@@ -212,7 +212,7 @@ switch (_mode) do {
 		if (typeName _result == "SCALAR") then {_input deleteAt 0};
 
 		{
-			[_x,"createINIDB",_leader,_database] call INCON_fnc_persHandler;
+			[_x,"createINIDB",_leader,_database] call INCON_fnc_persMain;
 		} forEach _input;
 	};
 
@@ -222,7 +222,7 @@ switch (_mode) do {
 		_result = (count _input);
 
 		{
-			[_x,"createINIDB",_leader,_database] call INCON_fnc_persHandler;
+			[_x,"createINIDB",_leader,_database] call INCON_fnc_persMain;
 		} forEach _input;
 	};
 
@@ -231,7 +231,7 @@ switch (_mode) do {
 
 		_input params ["_unitInfoEncoded"];
 		_unitInfo = ["decodeBase64", _unitInfoEncoded] call _database;
-		_groupMember = [(call compile _unitInfo),"create",_leader] call INCON_fnc_persHandler;
+		_groupMember = [(call compile _unitInfo),"create",_leader] call INCON_fnc_persMain;
 
 		_result = true;
 	};
