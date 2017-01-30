@@ -6,6 +6,6 @@ class INC_persist
 		file = "INC_persist\func";
 		class cargoHandler {description = "Handles cargo operations.";};
 		class groupPersist {description = "Loads and saves group persistence data.";};
-		class persMain {description = "Main class for Incon Peristence."};
+		class persMain {description = "Main class for Incon Peristence.";};
 	};
 };
