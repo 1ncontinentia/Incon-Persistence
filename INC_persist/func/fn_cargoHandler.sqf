@@ -15,7 +15,7 @@ _return = false;
 switch (_operation) do {
 
 	case "copyCargo": {
-		_input params ["_origin","_destination",["_moveCargo",true]];
+		_input params ["_origin",["_transfer",false],["_destination",objNull]];
 
 		private ["_movedCargo"];
 
@@ -29,13 +29,81 @@ switch (_operation) do {
 			_movedCargo pushBack (_container select 0);
 		};
 
-		if (_moveCargo) then {
+		{_movedCargo pushBack _x} forEach ((itemcargo _origin) + (magazinecargo _origin) + (weaponcargo _origin));
+
+		if (_transfer) then {
 			clearItemCargoGlobal _origin;
+			clearWeaponCargoGlobal _origin;
+			clearMagazineCargoGlobal _origin;
 			{_destination addItemCargoGlobal [_x,1]} forEach (_movedCargo);
 		};
 
+		//hint format ["Origin: %1, Destination: %2, Cargo List: %3",_origin,_destination,_movedCargo];
+
 		_return = _movedCargo;
 
+	};
+
+	case "saveContents": {
+
+		_input params [["_unit",player],["_radius",5]];
+
+		_persistentStorageArray = (nearestObjects [_unit, ["ReammoBox_F"],(_radius * 4)]) select {(_x getVariable ["INC_persistentStorage",false])};
+
+		if (count _persistentStorageArray == 0) then {_persistentStorageArray = (_unit nearEntities [["LandVehicle","Ship","Air"],(_radius * 4)]) select {(_x getVariable ["INC_persistentStorage",false])}};
+
+		if (count _persistentStorageArray == 0) exitWith {_return = false};
+
+		inidbiCargo = ["new", "INC_cargoPersDB"] call OO_INIDBI;
+
+		if (isNil "INC_NewKey") exitWith {diag_log "Incon persistence: New key not found, unable to save cargo."; _return = false};
+
+		{
+			private ["_contentsKey","_crateKey","_crateDetails","_contents"];
+
+			_crateKey = format ["INC_persCargoData%1%2%3Crate",_x,INC_NewKey];
+			_crateDetails = [(typeOf _x),(getPosWorld _x),damage _x];
+
+			_contentsKey = format ["INC_persCargoData%1%2%3",_x,INC_NewKey];
+			_contents = [[_x,false],"copyCargo"] call INCON_fnc_cargoHandler;
+
+			["write", [(str missionName), _crateKey, _crateDetails]] call inidbiCargo;
+			["write", [(str missionName), _contentsKey, _contents]] call inidbiCargo;
+		} forEach _persistentStorageArray;
+
+		_return = true;
+	};
+
+	case "loadContents": {
+
+		_input params ["_container"];
+
+		inidbiCargo = ["new", "INC_cargoPersDB"] call OO_INIDBI;
+
+		_contentsKey = format ["INC_persCargoData%1%2%3",_container,INC_OldKey];
+		_crateKey = format ["INC_persCargoData%1%2%3Crate",_container,INC_OldKey];
+
+		_crateDetails = ["read", [(str missionName), _crateKey,[]]] call inidbiCargo;
+
+		_contents = ["read", [(str missionName), _contentsKey,[]]] call inidbiCargo;
+
+		_crateDetails params ["_type","_pos","_damage"];
+
+		//deleteVehicle _container;
+		//_container = _type createVehicle [0,0,0];
+
+		clearItemCargoGlobal _origin;
+		clearWeaponCargoGlobal _origin;
+		clearMagazineCargoGlobal _origin;
+
+		_container setPosWorld _pos;
+
+		_container setDamage _damage;
+		{_container addItemCargoGlobal [_x, 1]} forEach _contents;
+
+		_container setVariable ["INC_persistentStorage",true,true];
+
+		_return = true;
 	};
 
 	case "findNearCrate": {
@@ -56,7 +124,7 @@ switch (_operation) do {
 
 		if ((count _containerArray == 0) && {_attempt <= 2}) then {_attempt = 2; _containerArray = (_unit nearEntities [["LandVehicle","Ship","Air"],_radius]) select {!(_x getVariable ["INC_persistentStorage",false])}};
 
-		if ((count _containerArray == 0) && {_attempt <= 3}) then {_attempt = 3; _containerArray =  (nearestObjects [_unit, ["ReammoBox_F"],_radius])} select {!(_x getVariable ["INC_persistentStorage",false])}};
+		if ((count _containerArray == 0) && {_attempt <= 3}) then {_attempt = 3; _containerArray =  (nearestObjects [_unit, ["ReammoBox_F"],_radius]) select {!(_x getVariable ["INC_persistentStorage",false])}};
 
 		if (count _containerArray == 0) exitWith {_return = false};
 
@@ -74,7 +142,9 @@ switch (_operation) do {
 		_return = true;
 
 		if (_transfer) then {
-			[[_activeContainer,(_persistentStorageArray select 0),true],"copyCargo"] call INCON_fnc_cargoHandler;
+			[[_activeContainer,true,(_persistentStorageArray select 0)],"copyCargo"] call INCON_fnc_cargoHandler;
+
+			[[(_persistentStorageArray select 0),10],"saveContents"] call INCON_fnc_cargoHandler;
 		};
 	};
 
@@ -95,9 +165,9 @@ switch (_operation) do {
 				_success = [[_unit,true],"findNearCrate"] call INCON_fnc_cargoHandler;
 
 				if (_success) then {
-					hint "Cargo transferred.";
+					//hint "Cargo transferred.";
 				} else {
-					hint "Transfer failed.";
+					//hint "Transfer failed.";
 				};
 
 			},[],1,false,true,"","(_this == _target)"
@@ -113,7 +183,7 @@ switch (_operation) do {
 					sleep 3;
 					_timer = _timer - 3;
 
-					(!([[_unit],"findNearCrate"] call INCON_fnc_gearHandler) || {_timer <= 0})
+					(!([[_unit],"findNearCrate"] call INCON_fnc_cargoHandler) || {_timer <= 0})
 				};
 
 				_unit removeAction INC_transferCargoAction;
@@ -127,12 +197,15 @@ switch (_operation) do {
 
 	case "addCargoActions": {
 
-		params ["_unit"];
+		_input params ["_unit"];
 
 		_unit addEventHandler ["InventoryClosed", {
 
 			params ["_unit"];
-			if ([[_unit],"findNearCrate"] call INCON_fnc_gearHandler) then {
+
+			[[_unit,5],"saveContents"] call INCON_fnc_cargoHandler;
+
+			if ([[_unit],"findNearCrate"] call INCON_fnc_cargoHandler) then {
 				[[_unit,true,4],"cargoAction"] call INCON_fnc_cargoHandler;
 			};
 		}];

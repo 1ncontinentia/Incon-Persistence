@@ -22,11 +22,16 @@ params ["_plyr"];
     };
 };*/
 
+
 if (isNil "INC_OldKey") then {
 
-    _oldKey = ["InconPersKey"] call ALiVE_fnc_getData;
+    if (isDedicated) then {_oldKey = ["InconPersKey"] call ALiVE_fnc_getData};
 
-    if (isNil "_oldKey") then {diag_log format ["Incon Persistence previous data not found: %1",_oldKey]} else {
+    if (isNil "_oldKey") then {
+
+        diag_log format ["Incon Persistence previous data key not found."];
+
+    } else {
 
         missionNamespace setVariable ["INC_OldKey",_oldKey,true];
 
@@ -42,7 +47,7 @@ if (isNil "INC_NewKey") then {
 
 	_newKey = str (round (random 10000));
 
-	["InconPersKey",_newKey] call ALiVE_fnc_setData;
+	if (isDedicated) then {["InconPersKey",_newKey] call ALiVE_fnc_setData} else {_newKey = 111};
 
 	missionNamespace setVariable ["INC_NewKey",_newKey,true];
 
