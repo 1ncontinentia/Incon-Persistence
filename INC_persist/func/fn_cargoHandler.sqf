@@ -4,6 +4,8 @@ Group Persistence Handler
 
 Author: Incontinentia
 
+(With thanks to hoverguy on the BI forums for the getConfig / mass related code!)
+
 */
 
 params [["_input",objNull],["_operation","copy"],["_leader",objNull],["_dataBase",objNull]];
@@ -14,39 +16,118 @@ _return = false;
 
 switch (_operation) do {
 
+	case "getConfig": {
+
+	    _input params["_item"];
+		_return = "";
+	    switch true do
+	    {
+	        case (isClass(configFile >> "CfgWeapons" >> _item)): {_return = "CfgWeapons"};
+	        case (isClass(configFile >> "CfgMagazines" >> _item)): {_return = "CfgMagazines"};
+	        case (isClass(configFile >> "CfgVehicles" >> _item)): {_return = "CfgVehicles"};
+	    };
+	};
+
 	case "copyCargo": {
 		_input params ["_origin",["_transfer",false],["_destination",objNull]];
 
-		private ["_movedCargo"];
+		private ["_movedItems","_wpnItmsCrgo"];
+		_movedItems = [];
+		{
+			private ["_weapons"];
+			private _wpnItmsCrgo = weaponsItemsCargo (_x select 1);
+			{for "_i" from 1 to ((count _x - 1)) do {
+				private _item = _x select _i;
+				if (_item isEqualType "" && {_item != ""}) then {
+					if (_i > 0) then {_movedItems pushBack _item} else {_movedItems pushBack ([_item] call BIS_fnc_baseWeapon)};
+				} else {
+					if (_i == 4 && {!(_item isEqualTo [])}) then {_movedItems pushBack (_item select 0)};
+				};
+			}} forEach _wpnItmsCrgo;
+			{_movedItems pushBack _x} forEach ((itemCargo (_x select 1)) + (magazineCargo (_x select 1)) + (backPackCargo (_x select 1)));
+			true
+		} count (everyContainer _origin);
 
-		_movedCargo = [];
+		_wpnItmsCrgo = (weaponsItemsCargo _origin);
+		{for "_i" from 0 to ((count _x - 1)) do {
+			private _item = _x select _i;
+			if (_item isEqualType "" && {_item != ""}) then {
+				if (_i > 0) then {_movedItems pushBack _item} else {_movedItems pushBack ([_item] call BIS_fnc_baseWeapon)};
+			} else {
+				if (_i == 4 && {!(_item isEqualTo [])}) then {_movedItems pushBack (_item select 0)};
+			};
+		}} forEach _wpnItmsCrgo;
+		{_movedItems pushBack _x} forEach ((itemCargo _origin) + (magazineCargo _origin) + (backPackCargo _origin));
 
-		for "_i" from 0 to ((count (everyContainer _origin))-1) do {
-			private ["_container","_contents"];
-			_container = ((everyContainer _origin) select _i);
-			_contents = (itemcargo (_container select 1)) + (magazinecargo (_container select 1)) + (weaponcargo (_container select 1));
-			{_movedCargo pushBack _x} forEach _contents;
-			_movedCargo pushBack (_container select 0);
-		};
-
-		{_movedCargo pushBack _x} forEach ((itemcargo _origin) + (magazinecargo _origin) + (weaponcargo _origin));
+		_return = _movedItems;
 
 		if (_transfer) then {
+
+			_destCargo = [];
+
+			{
+				private ["_weapons"];
+				private _wpnItmsCrgo = weaponsItemsCargo (_x select 1);
+				{for "_i" from 1 to ((count _x - 1)) do {
+					private _item = _x select _i;
+					if (_item isEqualType "" && {_item != ""}) then {
+						if (_i > 0) then {_destCargo pushBack _item} else {_destCargo pushBack ([_item] call BIS_fnc_baseWeapon)};
+					} else {
+						if (_i == 4 && {!(_item isEqualTo [])}) then {_destCargo pushBack (_item select 0)};
+					};
+				}} forEach _wpnItmsCrgo;
+				{_destCargo pushBack _x} forEach ((itemCargo (_x select 1)) + (magazineCargo (_x select 1)) + (backPackCargo (_x select 1)));
+				true
+			} count (everyContainer _destination);
+
+			_wpnItmsCrgo = (weaponsItemsCargo _destination);
+			{for "_i" from 1 to ((count _x - 1)) do {
+				private _item = _x select _i;
+				if (_item isEqualType "" && {_item != ""}) then {
+					if (_i > 0) then {_destCargo pushBack _item} else {_destCargo pushBack ([_item] call BIS_fnc_baseWeapon)};
+				} else {
+					if (_i == 4 && {!(_item isEqualTo [])}) then {_destCargo pushBack (_item select 0)};
+				};
+			}} forEach _wpnItmsCrgo;
+			{_destCargo pushBack _x} forEach ((itemCargo _destination) + (magazineCargo _destination) + (backPackCargo _destination));
+
+			_totalCargo = _movedItems + _destCargo;
+
+			_destCapacity = getNumber(configFile >> "CfgVehicles" >> (typeOf _destination) >> "maximumLoad");
+
+		    _totalMass = 0;
+		    _return = false;
+
+			diag_log _movedItems;
+
+		    {
+		        _itemClass = [[_x],"getConfig"] call INCON_fnc_cargoHandler;
+		        _mass = getNumber(configFile >> _itemClass >> _x >> "mass");
+		        _totalMass = _mass + _totalMass;
+		    } forEach _movedItems;
+
+		    if (_totalMass > _destCapacity) exitWith {_return = false};
+
+			_return = true;
+
 			clearItemCargoGlobal _origin;
 			clearWeaponCargoGlobal _origin;
 			clearMagazineCargoGlobal _origin;
-			{_destination addItemCargoGlobal [_x,1]} forEach (_movedCargo);
+			clearBackpackCargoGlobal _origin;
+
+			clearItemCargoGlobal _destination;
+			clearWeaponCargoGlobal _destination;
+			clearMagazineCargoGlobal _destination;
+			clearBackpackCargoGlobal _destination;
+			{_destination addItemCargoGlobal [_x, 1]} forEach (_totalCargo select {!(_x isKindOf "Bag_Base")});
+			{_destination addBackpackCargoGlobal [(_x call BIS_fnc_basicBackpack),1]} forEach (_totalCargo select {_x isKindOf "Bag_Base"});
 		};
-
-		//hint format ["Origin: %1, Destination: %2, Cargo List: %3",_origin,_destination,_movedCargo];
-
-		_return = _movedCargo;
-
+		hint format ["Origin: %1, Destination: %2, Cargo List: %3",_origin,_destination,_movedItems];
 	};
 
 	case "saveContents": {
 
-		_input params [["_unit",player],["_radius",5]];
+		_input params [["_unit",player],["_radius",3]];
 
 		_persistentStorageArray = (nearestObjects [_unit, ["ReammoBox_F"],(_radius * 4)]) select {(_x getVariable ["INC_persistentStorage",false])};
 
@@ -79,6 +160,8 @@ switch (_operation) do {
 		_input params ["_container"];
 
 		inidbiCargo = ["new", "INC_cargoPersDB"] call OO_INIDBI;
+
+		if (isNil "INC_OldKey") exitWith {_return = false};
 
 		_contentsKey = format ["INC_persCargoData%1%2%3",_container,INC_OldKey];
 		_crateKey = format ["INC_persCargoData%1%2%3Crate",_container,INC_OldKey];
@@ -142,7 +225,7 @@ switch (_operation) do {
 		_return = true;
 
 		if (_transfer) then {
-			[[_activeContainer,true,(_persistentStorageArray select 0)],"copyCargo"] call INCON_fnc_cargoHandler;
+			_return = [[_activeContainer,true,(_persistentStorageArray select 0)],"copyCargo"] call INCON_fnc_cargoHandler;
 
 			[[(_persistentStorageArray select 0),10],"saveContents"] call INCON_fnc_cargoHandler;
 		};
@@ -165,9 +248,9 @@ switch (_operation) do {
 				_success = [[_unit,true],"findNearCrate"] call INCON_fnc_cargoHandler;
 
 				if (_success) then {
-					//hint "Cargo transferred.";
+					//hint "Cargo transferred to nearest persistent container.";
 				} else {
-					//hint "Transfer failed.";
+					hint "Transfer failed.";
 				};
 
 			},[],1,false,true,"","(_this == _target)"
