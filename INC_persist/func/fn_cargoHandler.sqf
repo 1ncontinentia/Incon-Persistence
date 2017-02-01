@@ -39,12 +39,13 @@ switch (_operation) do {
 			{for "_i" from 1 to ((count _x - 1)) do {
 				private _item = _x select _i;
 				if (_item isEqualType "" && {_item != ""}) then {
-					if (_i > 0) then {_movedItems pushBack _item} else {_movedItems pushBack ([_item] call BIS_fnc_baseWeapon)};
+					if (_i > 0) then {_movedItems pushBack _item};
 				} else {
 					if (_i == 4 && {!(_item isEqualTo [])}) then {_movedItems pushBack (_item select 0)};
 				};
 			}} forEach _wpnItmsCrgo;
 			{_movedItems pushBack _x} forEach ((itemCargo (_x select 1)) + (magazineCargo (_x select 1)) + (backPackCargo (_x select 1)));
+			{_movedItems pushBack ([_x] call BIS_fnc_baseWeapon)} forEach (weaponCargo (_x select 1));
 			true
 		} count (everyContainer _origin);
 
@@ -52,12 +53,13 @@ switch (_operation) do {
 		{for "_i" from 0 to ((count _x - 1)) do {
 			private _item = _x select _i;
 			if (_item isEqualType "" && {_item != ""}) then {
-				if (_i > 0) then {_movedItems pushBack _item} else {_movedItems pushBack ([_item] call BIS_fnc_baseWeapon)};
+				if (_i > 0) then {_movedItems pushBack _item};
 			} else {
 				if (_i == 4 && {!(_item isEqualTo [])}) then {_movedItems pushBack (_item select 0)};
 			};
 		}} forEach _wpnItmsCrgo;
 		{_movedItems pushBack _x} forEach ((itemCargo _origin) + (magazineCargo _origin) + (backPackCargo _origin));
+		{_movedItems pushBack ([_x] call BIS_fnc_baseWeapon)} forEach (weaponCargo _origin);
 
 		_return = _movedItems;
 
@@ -71,12 +73,13 @@ switch (_operation) do {
 				{for "_i" from 1 to ((count _x - 1)) do {
 					private _item = _x select _i;
 					if (_item isEqualType "" && {_item != ""}) then {
-						if (_i > 0) then {_destCargo pushBack _item} else {_destCargo pushBack ([_item] call BIS_fnc_baseWeapon)};
+						if (_i > 0) then {_destCargo pushBack _item};
 					} else {
 						if (_i == 4 && {!(_item isEqualTo [])}) then {_destCargo pushBack (_item select 0)};
 					};
 				}} forEach _wpnItmsCrgo;
 				{_destCargo pushBack _x} forEach ((itemCargo (_x select 1)) + (magazineCargo (_x select 1)) + (backPackCargo (_x select 1)));
+				{_movedItems pushBack ([_x] call BIS_fnc_baseWeapon)} forEach (weaponCargo (_x select 1));
 				true
 			} count (everyContainer _destination);
 
@@ -84,12 +87,13 @@ switch (_operation) do {
 			{for "_i" from 1 to ((count _x - 1)) do {
 				private _item = _x select _i;
 				if (_item isEqualType "" && {_item != ""}) then {
-					if (_i > 0) then {_destCargo pushBack _item} else {_destCargo pushBack ([_item] call BIS_fnc_baseWeapon)};
+					if (_i > 0) then {_destCargo pushBack _item};
 				} else {
 					if (_i == 4 && {!(_item isEqualTo [])}) then {_destCargo pushBack (_item select 0)};
 				};
 			}} forEach _wpnItmsCrgo;
 			{_destCargo pushBack _x} forEach ((itemCargo _destination) + (magazineCargo _destination) + (backPackCargo _destination));
+			{_movedItems pushBack ([_x] call BIS_fnc_baseWeapon)} forEach (weaponCargo _destination);
 
 			_totalCargo = _movedItems + _destCargo;
 
