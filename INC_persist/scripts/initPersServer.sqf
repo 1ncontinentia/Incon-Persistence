@@ -22,20 +22,32 @@ params ["_plyr"];
     };
 };*/
 
+if (!isMultiplayer) exitWith {diag_log format ["Playing singleplayer, Incon Persistence exiting."];};
+
+diag_log format ["Incon Persistence loading data keys."];
 
 if (isNil "INC_OldKey") then {
 
-    if (isDedicated) then {_oldKey = ["InconPersKey"] call ALiVE_fnc_getData};
+    [] spawn {
+        _oldKey = ["InconPersKey"] call ALiVE_fnc_getData;
 
-    if (isNil "_oldKey") then {
+        if (isNil "_oldKey") then {
+
+            diag_log format ["Incon Persistence previous data key not found."];
+
+        } else {
+
+            missionNamespace setVariable ["INC_OldKey",_oldKey,true];
+
+            diag_log format ["Incon Persistence previous data key: %1",_oldKey];
+        };
+    };
+
+    sleep 2;
+
+    if (isNil "INC_OldKey") then {
 
         diag_log format ["Incon Persistence previous data key not found."];
-
-    } else {
-
-        missionNamespace setVariable ["INC_OldKey",_oldKey,true];
-
-        diag_log format ["Incon Persistence previous data key: %1",_oldKey];
     };
 };
 
@@ -47,7 +59,7 @@ if (isNil "INC_NewKey") then {
 
 	_newKey = str (round (random 10000));
 
-	if (isDedicated) then {["InconPersKey",_newKey] call ALiVE_fnc_setData} else {_newKey = 111};
+	["InconPersKey",_newKey] call ALiVE_fnc_setData;
 
 	missionNamespace setVariable ["INC_NewKey",_newKey,true];
 
