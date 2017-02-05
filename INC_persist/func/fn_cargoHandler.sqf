@@ -126,7 +126,6 @@ switch (_operation) do {
 			{_destination addItemCargoGlobal [_x, 1]} forEach (_totalCargo select {!(_x isKindOf "Bag_Base")});
 			{_destination addBackpackCargoGlobal [(_x call BIS_fnc_basicBackpack),1]} forEach (_totalCargo select {_x isKindOf "Bag_Base"});
 		};
-		hint format ["Origin: %1, Destination: %2, Cargo List: %3",_origin,_destination,_movedItems];
 	};
 
 	case "saveContents": {
