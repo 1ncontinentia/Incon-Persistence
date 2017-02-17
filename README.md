@@ -13,7 +13,7 @@
 ### Usage
 
 To have full persistent AI teammates you need to:
-(a) place all files into your mission root. If you already have a description.ext or initPlayerLocal.sqf, add in the code from Incon-Persistence to your original files.
+(a) place all files into your mission root. If you already have a description.ext or initPlayerLocal.sqf, add in the code from Incon-Persistence to your original files. In description.ext, if the class is already defined (for instance, cfgFunctions), just add the #include line to the given class. 
 (b) save and exit the server at the end of each session
 (c) not be a numpty
 
