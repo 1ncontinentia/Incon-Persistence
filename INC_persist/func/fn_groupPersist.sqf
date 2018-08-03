@@ -8,358 +8,130 @@ Author: Incontinentia
 
 params [["_operation","loadGroup"],["_unit",objNull]];
 
-#include "..\INC_groupPers_setup.sqf"
+if !(isClass(configFile >> "CfgPatches" >> "inidbi2")) exitWith {diag_log "inidbi2 missing, group persistence exiting"};
+if !(isClass(configFile >> "CfgPatches" >> "ALiVE_main")) exitWith {};
 
-switch (_database) do {
+inidbi = ["new", "INC_groupPersDB"] call OO_INIDBI;
 
-    case "hybrid" : {
+switch (_operation) do {
 
-        //Locality, either but ideally server as otherwise "onExit" doesn't work.
-        if !(isClass(configFile >> "CfgPatches" >> "inidbi2")) exitWith {};
-        if !(isClass(configFile >> "CfgPatches" >> "ALiVE_main")) exitWith {};
+    case "loadGroup" : {
 
-        inidbi = ["new", "INC_groupPersDB"] call OO_INIDBI;
+        [_unit] spawn {
 
-        switch (_operation) do {
+            params ["_unit"];
+            private ["_read","_read2","_read3","_groupData","_dataKey","_dataKey2","_dataKey3","_index"];
 
-            case "loadGroup" : {
-                [_unit] spawn {
-                    params ["_unit"];
-                    private ["_read","_read2","_read3","_groupData","_dataKey","_dataKey2","_dataKey3","_index"];
+            waituntil {
+            sleep 1;
+            (!(isNil "INC_oldKey") && (player getvariable ["alive_sys_player_playerloaded",false]))
+            };
 
-                    waituntil {
-                        sleep 1;
-                        (!(isNil "INC_oldKey") && (player getvariable ["alive_sys_player_playerloaded",false]))
-                    };
+            sleep 0.3;
 
-                    /*if (isNil "INC_oldKey") then {
-                        _oldKey = ["InconPersKey","loadAliveData"] remoteExecCall ["INCON_fnc_persMain",2];
-                        missionNamespace setVariable ["INC_oldKey",_oldKey,true];
-                    };*/
+            _dataKey = format ["INC_persGroupData%1%2%3",_unit,(getPlayerUID _unit),INC_oldKey];
+            _read = ["read", [(str missionName), _dataKey,[]]] call inidbi;
 
-                    sleep 1;
+            _dataKey2 = format ["INC_persGroupData2%1%2%3",_unit,(getPlayerUID _unit),INC_oldKey];
+            _read2 = ["read", [(str missionName), _dataKey2,[]]] call inidbi;
 
+            _dataKey3 = format ["INC_persGroupData3%1%2%3",_unit,(getPlayerUID _unit),INC_oldKey];
+            _read3 = ["read", [(str missionName), _dataKey3,[]]] call inidbi;
 
-                    _dataKey = format ["INC_persGroupData%1%2%3",_unit,(getPlayerUID _unit),INC_oldKey];
-                    _read = ["read", [(str missionName), _dataKey,[]]] call inidbi;
+            if (_read isEqualTo []) exitWith {};
 
-                    _dataKey2 = format ["INC_persGroupData2%1%2%3",_unit,(getPlayerUID _unit),INC_oldKey];
-                    _read2 = ["read", [(str missionName), _dataKey2,[]]] call inidbi;
+            {if ((_x != leader group _x) && {!(_x in playableUnits)}) then {deleteVehicle _x}} forEach units group _unit;
 
-                    _dataKey3 = format ["INC_persGroupData3%1%2%3",_unit,(getPlayerUID _unit),INC_oldKey];
-                    _read3 = ["read", [(str missionName), _dataKey3,[]]] call inidbi;
+            sleep 0.3;
 
-                    if (_read isEqualTo []) exitWith {};
+            _index = (_read select 0);
 
-                    {if ((_x != leader group _x) && {!(_x in playableUnits)}) then {deleteVehicle _x}} forEach units group _unit;
+            _index params ["_float","_groupSize","_rating"];
 
-                    sleep 1;
+            sleep 1;
 
-                    _index = (_read select 0);
+            _unit addRating (0 - (rating _unit));
 
-                    _index params ["_float","_groupSize","_rating"];
+            _unit addRating _rating;
 
-                    sleep 2;
+            [_read,"loadGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
-                    _unit addRating (0 - (rating _unit));
+            if (_groupSize >= 5) then {
 
-                    _unit addRating _rating;
+                sleep 0.1;
 
-                    [_read,"loadGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
+                [_read2,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
-                    if (_groupSize >= 5) then {
+                if (_groupSize >= 9) then {
 
-                        sleep 0.1;
+                    sleep 0.1;
 
-                        [_read2,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-
-                        if (_groupSize >= 9) then {
-
-                            sleep 0.1;
-
-                            [_read3,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-                        };
-                    };
+                    [_read3,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
                 };
             };
 
-            case "saveGroup" : {
+            sleep 5;
 
-                [_unit] spawn {
-                    params ["_unit"];
-                    private ["_groupData","_dataKey","_encodedData","_secondIteration"];
-
-                    sleep 20;
-
-                    waituntil {
-                        sleep 1;
-                        !(isNil "INC_NewKey")
-                    };
-
-                    waitUntil {
-
-                        sleep 47;
-
-                        _encodedData = [[_unit],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-
-                        sleep 1;
-
-                        _dataKey = format ["INC_persGroupData%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
-
-                        ["write", [(str missionName), _dataKey, _encodedData]] call inidbi;
-
-                        sleep 1;
-
-                        if (count units group _unit >= 6) then {
-                            private ["_encodedData2"];
-                            _encodedData2 = [[_unit,"second"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-                            _dataKey2 = format ["INC_persGroupData2%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
-                            ["write", [(str missionName), _dataKey2, _encodedData2]] call inidbi;
-                        };
-
-                        if (count units group _unit >= 11) then {
-                            private ["_encodedData3"];
-                            _encodedData3 = [[_unit,"third"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-                            _dataKey3 = format ["INC_persGroupData3%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
-                            ["write", [(str missionName), _dataKey3, _encodedData3]] call inidbi;
-                        };
-
-                        !(isPlayer _unit)
-
-                    };
-                };
+            if (!(isNil "INCON_ucr_fnc_ucrMain") && {_unit getVariable ["isSneaky",false]}) then {
+                {
+                    sleep 0.2;
+                    [_x] execVM "INC_undercover\Scripts\initUCR.sqf";
+                    sleep 0.2;
+                    _x setVariable ["noChanges",true,true];
+                    _x setVariable ["isUndercover", true];
+                    sleep 0.2;
+                    [[_x,_unit],"addConcealActions"] call INCON_ucr_fnc_ucrMain;
+                } forEach ((units _unit) select {
+                    !(_x getVariable ["isUndercover",false]) &&
+                    {!isPlayer _x}
+                });
             };
         };
     };
 
-    case "alive" : {
-        if !(isClass(configFile >> "CfgPatches" >> "ALiVE_main")) exitWith {};
+    case "saveGroup" : {
 
-		//Locality: client, as anything that needs to be remotely executed is done from here
-		if (isDedicated) exitWith {};
+        [_unit] spawn {
+            params ["_unit"];
+            private ["_groupData","_dataKey","_encodedData","_secondIteration"];
 
-		switch (_operation) do {
-			case "loadGroup" : {
+            sleep 20;
 
-				[_unit] spawn {
-					params ["_unit"];
-					private ["_groupData","_dataKey"];
+            waituntil {
+                sleep 1;
+                !(isNil "INC_NewKey")
+            };
 
-					waitUntil {
-						sleep 3;
+            waitUntil {
 
-						(_unit getvariable ["alive_sys_player_playerloaded",false])
-					};
+                sleep 47;
 
-					_dataKey = format ["INC_persGroupData%1%2",_unit,(getPlayerUID _unit)];
+                _encodedData = [[_unit],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
 
-					_groupData = [_dataKey,"loadAliveData"] remoteExecCall ["INCON_fnc_persMain",2];
+                sleep 1;
 
-					sleep 0.2;
+                _dataKey = format ["INC_persGroupData%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
 
-					if (count _groupData != 0) then {
+                ["write", [(str missionName), _dataKey, _encodedData]] call inidbi;
 
-						{if ((_x != leader group _x) || {_x in playableUnits}) then {deleteVehicle _x}} forEach units group _unit;
+                sleep 1;
 
-						[_groupData,"loadGroup",_unit] call INCON_fnc_persMain;
-
-					};
-				};
-			};
-
-            case "saveGroup" : {
-        		switch (_saveType) do {
-
-        			case "loop": {
-						[_unit] spawn {
-							params ["_unit"];
-							private ["_groupData","_dataKey"];
-
-							sleep 60;
-
-							_dataKey = format ["INC_persGroupData%1%2",_unit,(getPlayerUID _unit)];
-
-							waitUntil {
-
-								sleep 59;
-
-								_groupData = [_unit,"saveGroup"] call INCON_fnc_persMain;
-
-								sleep 1;
-
-								[[_dataKey,_groupData],"saveAliveData"] remoteExecCall ["INCON_fnc_persMain",2];
-
-								!(isPlayer _unit)
-
-							};
-						};
-					};
-
-        			case "onExit": {
-						[_unit] spawn {
-							params ["_unit"];
-							private ["_groupData","_dataKey"];
-
-							sleep 60;
-
-			                _dataKey = format ["INC_persGroupData%1%2",_unit,(getPlayerUID _unit)];
-
-							waitUntil {
-
-								sleep 3;
-
-								!(isPlayer _unit)
-
-							};
-
-							_groupData = [_unit,"saveGroup"] call INCON_fnc_persMain;
-
-							sleep 1;
-
-							[[_dataKey,_groupData],"saveAliveData"] remoteExecCall ["INCON_fnc_persMain",2];
-						};
-        			};
-        		};
-        	};
-        };
-    };
-
-    case "iniDBI2" : {
-
-		//Locality, either but ideally server as otherwise "onExit" doesn't work.
-        if !(isClass(configFile >> "CfgPatches" >> "inidbi2")) exitWith {};
-        if !(isClass(configFile >> "CfgPatches" >> "ALiVE_main")) exitWith {};
-
-		if (isNil "inidbi") then {inidbi = ["new", "INC_groupPersDB"] call OO_INIDBI};
-
-		switch (_operation) do {
-
-			case "loadGroup" : {
-                [_unit] spawn {
-                    params ["_unit"];
-                    private ["_read","_read2","_read3","_groupData","_dataKey","_dataKey2","_dataKey3","_index"];
-
-                    waitUntil {
-                        sleep 3;
-
-                        (_unit getvariable ["alive_sys_player_playerloaded",false])
-                    };
-
-                    _dataKey = format ["INC_persGroupData%1%2",_unit,(getPlayerUID _unit)];
-                    _read = ["read", [(str missionName), _dataKey,[]]] call inidbi;
-
-					_dataKey2 = format ["INC_persGroupData2%1%2",_unit,(getPlayerUID _unit)];
-					_read2 = ["read", [(str missionName), _dataKey2,[]]] call inidbi;
-
-					_dataKey3 = format ["INC_persGroupData3%1%2",_unit,(getPlayerUID _unit)];
-					_read3 = ["read", [(str missionName), _dataKey3,[]]] call inidbi;
-
-                    if (_read isEqualTo []) exitWith {};
-
-					sleep 1;
-
-					_index = (_read select 0);
-
-                    _index params ["_float","_groupSize","_rating"];
-
-					_floatCompare = dateToNumber date;
-
-                    if ((typeName _float == "SCALAR") && {_float > (_floatCompare - 0.000032)} && {_float < (_floatCompare + 0.000032)}) then {
-
-                        {if ((_x != leader group _x) && {!(_x in playableUnits)}) then {deleteVehicle _x}} forEach units group _unit;
-
-                        _unit addRating (0 - (rating _unit));
-
-                        _unit addRating _rating;
-
-                        [_read,"loadGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-
-                        if (_groupSize >= 5) then {
-
-                            sleep 0.1;
-
-                            [_read2,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-
-                            if (_groupSize >= 9) then {
-
-                                sleep 0.1;
-
-                                [_read3,"loadLargeGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-                            };
-                        };
-                    };
+                if (count units group _unit >= 6) then {
+                    private ["_encodedData2"];
+                    _encodedData2 = [[_unit,"second"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
+                    _dataKey2 = format ["INC_persGroupData2%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
+                    ["write", [(str missionName), _dataKey2, _encodedData2]] call inidbi;
                 };
-			};
 
-        	case "saveGroup" : {
+                if (count units group _unit >= 11) then {
+                    private ["_encodedData3"];
+                    _encodedData3 = [[_unit,"third"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
+                    _dataKey3 = format ["INC_persGroupData3%1%2%3",_unit,(getPlayerUID _unit),INC_NewKey];
+                    ["write", [(str missionName), _dataKey3, _encodedData3]] call inidbi;
+                };
 
-        		switch (_saveType) do {
-
-        			case "loop": {
-        				[_unit] spawn {
-        					params ["_unit"];
-        					private ["_groupData","_dataKey","_encodedData","_secondIteration"];
-
-        					sleep 180;
-
-        					waitUntil {
-
-        						sleep 57;
-
-        	                    _encodedData = [[_unit],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-
-								sleep 1;
-
-            	                _dataKey = format ["INC_persGroupData%1%2",_unit,(getPlayerUID _unit)];
-
-        	                    ["write", [(str missionName), _dataKey, _encodedData]] call inidbi;
-
-                                sleep 1;
-
-                                if (count units group _unit >= 6) then {
-                                    private ["_encodedData2"];
-            	                    _encodedData2 = [[_unit,"second"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-                	                _dataKey2 = format ["INC_persGroupData2%1%2",_unit,(getPlayerUID _unit)];
-            	                    ["write", [(str missionName), _dataKey2, _encodedData2]] call inidbi;
-                                };
-
-                                if (count units group _unit >= 11) then {
-                                    private ["_encodedData3"];
-            	                    _encodedData3 = [[_unit,"third"],"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-                	                _dataKey3 = format ["INC_persGroupData3%1%2",_unit,(getPlayerUID _unit)];
-            	                    ["write", [(str missionName), _dataKey3, _encodedData3]] call inidbi;
-                                };
-
-        						!(isPlayer _unit)
-
-        					};
-        				};
-        			};
-
-        			case "onExit": {
-        				[_unit] spawn {
-        					params ["_unit"];
-        					private ["_groupData","_dataKey"];
-
-        					sleep 60;
-
-        	                _dataKey = format ["INC_persGroupData%1%2",_unit,(getPlayerUID _unit)];
-
-							waitUntil {
-
-								sleep 5;
-
-								!(isPlayer _unit)
-
-							};
-
-    	                    _encodedData = [_unit,"saveGroupINIDB",_unit,inidbi] call INCON_fnc_persMain;
-    	                    ["write", [(str missionName), _dataKey, _encodedData]] call inidbi;
-
-        				};
-                    };
-        		};
+                !(isPlayer _unit)
             };
         };
-	};
+    };
 };
