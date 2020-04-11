@@ -178,9 +178,9 @@ switch (_operation) do {
 		//deleteVehicle _container;
 		//_container = _type createVehicle [0,0,0];
 
-		clearItemCargoGlobal _origin;
-		clearWeaponCargoGlobal _origin;
-		clearMagazineCargoGlobal _origin;
+		clearItemCargoGlobal _container;
+		clearWeaponCargoGlobal _container;
+		clearMagazineCargoGlobal _container;
 
 		_container setPosWorld _pos;
 

@@ -8,7 +8,7 @@ waitUntil {
 };
 
 if (!isNil "INC_oldKey") then {
-	{[[_x],"loadContents"] call INCON_fnc_cargoHandler} forEach ((entities [["ReammoBox_F","LandVehicle","Ship","Air"]]) select {(_x getVariable ["INC_persistentStorage",false])});
-};
+    ["loadGroup",player] call INCON_fnc_groupPersist;
 
-["loadGroup",player] call INCON_fnc_groupPersist;
+	{[[_x],"loadContents"] call INCON_fnc_cargoHandler} forEach ((entities [["ReammoBox_F","LandVehicle","Ship","Air"],[],false,false]) select {(_x getVariable ["INC_persistentStorage",false])});
+};
