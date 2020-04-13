@@ -152,7 +152,7 @@ switch (_mode) do {
 					if (count _result <= 4) then {
 
 						_groupMember = (units group _unit) select _i;
-						if !((_groupMember getVariable ["isSneaky",false]) || {isPlayer _groupMember} || {_groupMember in playableUnits}) then {
+						if !((isPlayer _groupMember) || {_groupMember in playableUnits}) then {
 							_unitInfo = [_groupMember] call INCON_fnc_persMain;
 							_encodedData = ["encodeBase64", (str _unitInfo)] call _database;
 							_result pushBack _encodedData;
@@ -172,7 +172,7 @@ switch (_mode) do {
 					if (count _result <= 3) then {
 
 						_groupMember = (units group _unit) select _i;
-						if !((_groupMember getVariable ["isSneaky",false]) || {isPlayer _groupMember} || {_groupMember in playableUnits}) then {
+						if !((isPlayer _groupMember) || {_groupMember in playableUnits}) then {
 							_unitInfo = [_groupMember] call INCON_fnc_persMain;
 							_encodedData = ["encodeBase64", (str _unitInfo)] call _database;
 							_result pushBack _encodedData;
@@ -192,7 +192,7 @@ switch (_mode) do {
 					if (count _result <= 3) then {
 
 						_groupMember = (units group _unit) select _i;
-						if !((_groupMember getVariable ["isSneaky",false]) || {isPlayer _groupMember} || {_groupMember in playableUnits}) then {
+						if !((isPlayer _groupMember) || {_groupMember in playableUnits}) then {
 							_unitInfo = [_groupMember] call INCON_fnc_persMain;
 							_encodedData = ["encodeBase64", (str _unitInfo)] call _database;
 							_result pushBack _encodedData;
